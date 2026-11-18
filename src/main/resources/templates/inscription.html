@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+    <title>Inscription — Gestion Fioul</title>
+</head>
+<body>
+<main class="max-w-2xl mx-auto px-4 py-12">
+    <div class="bg-white rounded-xl shadow p-8">
+        <h1 class="text-2xl font-bold text-slate-900">Créer un compte</h1>
+        <p class="mt-1 text-sm text-slate-600">Les champs marqués d'un * sont obligatoires.</p>
+
+        <!--/*
+          th:object : l'objet du formulaire (attribut "inscription" du modèle).
+          *{email}   : raccourci pour ${inscription.email}.
+          th:field   : génère id, name et value (et "checked" pour un bouton radio) à partir du champ.
+          th:errors  : affiche le(s) message(s) d'erreur du champ ; th:if="${#fields.hasErrors('...')}" teste s'il y en a.
+          th:errorclass : classe CSS ajoutée au champ seulement s'il est en erreur.
+        */-->
+        <form th:action="@{/inscription}" th:object="${inscription}" method="post" class="mt-6 space-y-5" novalidate>
+
+            <!--/* erreurs globales : celles qui ne concernent pas un champ précis (refus de l'API) */-->
+            <div th:if="${#fields.hasGlobalErrors()}"
+                 class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+                <p th:each="erreur : ${#fields.globalErrors()}" th:text="${erreur}">Un compte existe déjà avec cet email</p>
+            </div>
+
+            <fieldset>
+                <legend class="block text-sm font-medium text-slate-700">Type de compte *</legend>
+                <div class="mt-2 flex gap-6">
+                    <label th:each="r : ${roles}" class="flex items-center gap-2">
+                        <input type="radio" th:field="*{role}" th:value="${r}" class="accent-amber-600">
+                        <span th:text="${r.name() == 'CLIENT'} ? 'Client (je commande du fioul)' : 'Fournisseur (je vends du fioul)'">Client</span>
+                    </label>
+                </div>
+                <p th:if="${#fields.hasErrors('role')}" th:errors="*{role}" class="mt-1 text-sm text-red-600">Erreur</p>
+            </fieldset>
+
+            <div class="grid gap-5 md:grid-cols-2">
+                <div>
+                    <label for="nom" class="block text-sm font-medium text-slate-700">Nom *</label>
+                    <input type="text" th:field="*{nom}" autocomplete="family-name"
+                           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                           th:errorclass="border-red-500">
+                    <p th:if="${#fields.hasErrors('nom')}" th:errors="*{nom}" class="mt-1 text-sm text-red-600">Erreur</p>
+                </div>
+                <div>
+                    <label for="prenom" class="block text-sm font-medium text-slate-700">Prénom</label>
+                    <input type="text" th:field="*{prenom}" autocomplete="given-name"
+                           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200">
+                </div>
+            </div>
+
+            <!--/* affiché seulement pour un fournisseur (voir le script en bas de page) */-->
+            <div id="bloc-raison-sociale"
+                 th:classappend="${inscription.role?.name() != 'FOURNISSEUR'} ? 'hidden'">
+                <label for="raisonSociale" class="block text-sm font-medium text-slate-700">Raison sociale *</label>
+                <input type="text" th:field="*{raisonSociale}" autocomplete="organization"
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                       th:errorclass="border-red-500">
+                <p th:if="${#fields.hasErrors('raisonSociale')}" th:errors="*{raisonSociale}" class="mt-1 text-sm text-red-600">Erreur</p>
+            </div>
+
+            <div>
+                <label for="email" class="block text-sm font-medium text-slate-700">Email *</label>
+                <input type="email" th:field="*{email}" autocomplete="email"
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                       th:errorclass="border-red-500">
+                <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="mt-1 text-sm text-red-600">Erreur</p>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2">
+                <div>
+                    <label for="motDePasse" class="block text-sm font-medium text-slate-700">Mot de passe * (8 caractères min.)</label>
+                    <input type="password" th:field="*{motDePasse}" autocomplete="new-password"
+                           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                           th:errorclass="border-red-500">
+                    <p th:if="${#fields.hasErrors('motDePasse')}" th:errors="*{motDePasse}" class="mt-1 text-sm text-red-600">Erreur</p>
+                </div>
+                <div>
+                    <label for="confirmation" class="block text-sm font-medium text-slate-700">Confirmation *</label>
+                    <input type="password" th:field="*{confirmation}" autocomplete="new-password"
+                           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                           th:errorclass="border-red-500">
+                    <p th:if="${#fields.hasErrors('confirmation')}" th:errors="*{confirmation}" class="mt-1 text-sm text-red-600">Erreur</p>
+                </div>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2">
+                <div>
+                    <label for="telephone" class="block text-sm font-medium text-slate-700">Téléphone</label>
+                    <input type="tel" th:field="*{telephone}" autocomplete="tel"
+                           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200">
+                </div>
+                <div>
+                    <label for="adresse" class="block text-sm font-medium text-slate-700">Adresse</label>
+                    <input type="text" th:field="*{adresse}" autocomplete="street-address"
+                           placeholder="livraison (client) ou siège (fournisseur)"
+                           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200">
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="w-full rounded-lg bg-amber-600 px-4 py-2 font-medium text-white hover:bg-amber-700">
+                Créer mon compte
+            </button>
+        </form>
+
+        <p class="mt-6 text-center text-sm text-slate-600">
+            Déjà inscrit ? <a th:href="@{/connexion}" class="font-medium text-amber-700 hover:underline">Se connecter</a>
+        </p>
+    </div>
+
+    <!--/* confort uniquement : sans JavaScript, le serveur vérifie quand même la raison sociale */-->
+    <script>
+        document.querySelectorAll('input[name="role"]').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                document.getElementById('bloc-raison-sociale')
+                    .classList.toggle('hidden', radio.value !== 'FOURNISSEUR' || !radio.checked);
+            });
+        });
+    </script>
+</main>
+</body>
+</html>

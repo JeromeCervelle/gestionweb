@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--/*
+  Convention Spring Boot : pour une erreur de code 403 levée par le SITE lui-même (ici Spring Security :
+  utilisateur connecté mais sans le bon rôle), Boot cherche la vue error/403.html avant sa page Whitelabel.
+  (Une erreur 403 renvoyée par l'API passe, elle, par WebExceptionHandler et la vue erreur.html.)
+*/-->
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+    <title>Accès refusé — Gestion Fioul</title>
+</head>
+<body>
+<main class="max-w-2xl mx-auto px-4 py-16">
+    <div class="bg-white rounded-xl shadow p-8 border-l-4 border-red-500">
+        <p class="text-sm font-semibold text-red-600">Erreur 403</p>
+        <h1 class="mt-1 text-2xl font-bold text-slate-900">Accès refusé</h1>
+        <p class="mt-4 text-slate-700">Cette page n'est pas accessible avec votre type de compte.</p>
+        <a th:href="@{/}"
+           class="inline-block mt-6 rounded-lg bg-amber-600 px-4 py-2 text-white font-medium hover:bg-amber-700">
+            Retour à l'accueil
+        </a>
+    </div>
+</main>
+</body>
+</html>

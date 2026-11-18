@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>4.1.2</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>fr.limoges.valadon.gestionfioul</groupId>
+	<artifactId>gestionweb</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>gestionweb</name>
+	<description>Interface web (Thymeleaf + Tailwind CSS) de l'API gestionfioul</description>
+
+	<properties>
+		<java.version>27</java.version>
+	</properties>
+
+	<dependencies>
+		<!-- Spring MVC : contrôleurs et serveur Tomcat embarqué -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc</artifactId>
+		</dependency>
+		<!-- RestClient préconfiguré par Spring Boot (RestClient.Builder) pour appeler l'API -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-restclient</artifactId>
+		</dependency>
+		<!-- Thymeleaf : moteur de templates HTML côté serveur -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+		<!-- Bean Validation (Hibernate Validator) : @NotBlank, @Email, @Size... sur les formulaires -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<!-- Spring Security : formulaire de connexion, session, CSRF, protection des pages -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<!-- Dialecte "sec:" de Thymeleaf : afficher selon l'utilisateur connecté (version gérée par Spring Boot) -->
+		<dependency>
+			<groupId>org.thymeleaf.extras</groupId>
+			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
+		</dependency>
+		<!-- DevTools : redémarrage automatique et rechargement des templates en développement -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- formLogin(), csrf(), user(...) : simuler la connexion dans les tests MockMvc -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- @RestClientTest et MockRestServiceServer : simuler l'API dans les tests -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-restclient-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<!-- couverture de code : quelles lignes du site sont exécutées par les tests ? -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.16</version>
+				<configuration>
+					<excludes>
+						<!-- classe de lancement : sa méthode main() n'est jamais appelée par les tests (rien à tester) -->
+						<exclude>**/GestionwebApplication.class</exclude>
+					</excludes>
+				</configuration>
+				<executions>
+					<!-- 1. avant les tests : prépare l'agent Java qui observe le code pendant les tests -->
+					<execution>
+						<id>preparer-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<!-- 2. après les tests (./mvnw test) : rapport HTML dans target/site/jacoco/index.html -->
+					<execution>
+						<id>rapport</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					<!-- 3. ./mvnw verify : la build ÉCHOUE si la couverture passe sous les seuils -->
+					<execution>
+						<id>seuils</id>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<rule>
+									<!-- BUNDLE : le projet dans son ensemble -->
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.95</minimum>
+										</limit>
+										<limit>
+											<counter>BRANCH</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.80</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- site de documentation technique : ./mvnw verify site, puis ouvrir target/site/index.html -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>3.22.0</version>
+				<!-- pas de <locales>fr</locales> : le site irait dans target/site/fr/ et chercherait ses pages
+				     dans src/site/fr/. Notre page d'accueil et notre menu (src/site) sont en français ;
+				     les rapports générés gardent leurs titres anglais. -->
+			</plugin>
+		</plugins>
+	</build>
+
+	<!-- rapports inclus dans le site (menu « Rapports du projet ») -->
+	<reporting>
+		<plugins>
+			<!-- pages d'information sur le projet : on ne garde que la liste des dépendances
+			     (la page d'accueil est la nôtre : src/site/markdown/index.md) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>3.9.0</version>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>dependencies</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+			<!-- 1. Javadoc : documentation des classes, tirée des commentaires /** ... */ -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<configuration>
+					<!-- vérifie la syntaxe des commentaires (HTML, balises, références), sans exiger
+					     un commentaire sur chaque getter : on documente ce qui apporte quelque chose -->
+					<doclint>all,-missing</doclint>
+					<!-- un avertissement (@param qui ne correspond à aucun paramètre...) fait échouer le site -->
+					<failOnWarnings>true</failOnWarnings>
+					<doctitle>gestionweb ${project.version} : documentation technique</doctitle>
+					<windowtitle>gestionweb ${project.version}</windowtitle>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>javadoc</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+			<!-- 2. résultats des tests : report-only LIT les résultats de ./mvnw test, sans relancer les tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<version>3.5.6</version>
+				<configuration>
+					<!-- pas de lien vers le code source des tests (il faudrait le plugin JXR) -->
+					<linkXRef>false</linkXRef>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>report-only</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+			<!-- 3. couverture de code : LIT target/jacoco.exec produit pendant les tests -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.16</version>
+				<!-- la configuration de <build> ne s'applique PAS ici : il faut répéter l'exclusion -->
+				<configuration>
+					<excludes>
+						<exclude>**/GestionwebApplication.class</exclude>
+					</excludes>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>report</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+		</plugins>
+	</reporting>
+
+</project>

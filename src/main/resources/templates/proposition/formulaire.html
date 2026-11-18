@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+    <title>Proposer un barème — Gestion Fioul</title>
+</head>
+<body>
+<main class="max-w-4xl mx-auto px-4 py-12">
+    <a th:href="@{/campagnes}" class="text-sm text-amber-700 hover:underline">← Retour aux campagnes</a>
+
+    <div class="mt-4 bg-white rounded-xl shadow p-8">
+        <p class="text-sm font-semibold text-amber-700">Proposer un barème</p>
+        <h1 class="mt-1 text-2xl font-bold text-slate-900" th:text="${campagne.libelle}">Commande groupée d'hiver</h1>
+        <p class="mt-2 text-sm text-slate-600">
+            Clôture des participations le
+            <strong th:text="${#temporals.format(campagne.dateCloture, 'dd/MM/yyyy à HH:mm')}">31/12/2026 à 23:59</strong>.
+            Le volume total ne sera connu qu'à ce moment : votre barème indique à l'avance votre prix pour chaque tranche de volume.
+        </p>
+
+        <form th:action="@{/campagnes/{id}/proposer(id=${campagne.id})}" th:object="${proposition}"
+              method="post" class="mt-8 space-y-6" novalidate>
+
+            <!--/*
+              La touche Entrée déclenche le PREMIER bouton de soumission du formulaire.
+              Sans ce bouton invisible, ce serait « Retirer » du premier palier !
+              sr-only : masqué visuellement mais présent (un bouton en display:none peut être ignoré).
+            */-->
+            <button type="submit" class="sr-only" tabindex="-1" aria-hidden="true">Soumettre</button>
+
+            <div th:if="${#fields.hasGlobalErrors()}"
+                 class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+                <p th:each="erreur : ${#fields.globalErrors()}" th:text="${erreur}">Ce fournisseur a déjà soumis une proposition</p>
+            </div>
+
+            <div class="max-w-xs">
+                <label for="validiteJusqua" class="block text-sm font-medium text-slate-700">Offre valable jusqu'au *</label>
+                <input type="datetime-local" th:field="*{validiteJusqua}"
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                       th:errorclass="border-red-500">
+                <p th:if="${#fields.hasErrors('validiteJusqua')}" th:errors="*{validiteJusqua}" class="mt-1 text-sm text-red-600">Erreur</p>
+            </div>
+
+            <div>
+                <h2 class="text-lg font-semibold text-slate-900">Paliers de prix</h2>
+                <ul class="mt-1 list-disc pl-5 text-xs text-slate-500">
+                    <li>le premier palier commence à 0 L, chaque palier commence là où finit le précédent ;</li>
+                    <li>le volume maximum est exclu (5 000 L tombe dans le palier qui commence à 5 000 L) ;</li>
+                    <li>le dernier palier n'a pas de limite : laissez son volume maximum vide ;</li>
+                    <li>le prix du palier qui contient le volume total s'applique à <strong>tout</strong> le volume.</li>
+                </ul>
+                <p th:if="${#fields.hasErrors('paliers')}" th:errors="*{paliers}" class="mt-2 text-sm text-red-600">Erreur</p>
+
+                <div class="mt-4 overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="text-left text-slate-600">
+                        <tr>
+                            <th class="py-2 pr-3">Palier</th>
+                            <th class="py-2 pr-3">De (litres) *</th>
+                            <th class="py-2 pr-3">Jusqu'à (litres, exclu)</th>
+                            <th class="py-2 pr-3">Prix au litre (€) *</th>
+                            <th class="py-2"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!--/*
+                          etat : variable d'itération de th:each (index, count, size, first, last...).
+                          __${etat.index}__ : PRÉ-TRAITEMENT. L'expression entre __ __ est évaluée d'abord,
+                          son résultat est collé dans l'expression englobante :
+                          *{paliers[__${etat.index}__].volumeMin} devient *{paliers[0].volumeMin}, *{paliers[1].volumeMin}...
+                          th:field génère alors name="paliers[0].volumeMin", que Spring sait relire.
+                        */-->
+                        <tr th:each="palier, etat : *{paliers}" class="align-top">
+                            <td class="py-2 pr-3 font-medium text-slate-700" th:text="|n° ${etat.count}|">n° 1</td>
+                            <td class="py-2 pr-3">
+                                <input type="number" min="0" step="1" th:field="*{paliers[__${etat.index}__].volumeMin}"
+                                       class="w-32 rounded-lg border border-slate-300 px-3 py-2"
+                                       th:errorclass="border-red-500">
+                                <p th:if="${#fields.hasErrors('paliers[__${etat.index}__].volumeMin')}"
+                                   th:errors="*{paliers[__${etat.index}__].volumeMin}" class="mt-1 text-xs text-red-600">Erreur</p>
+                            </td>
+                            <td class="py-2 pr-3">
+                                <input type="number" min="1" step="1" th:field="*{paliers[__${etat.index}__].volumeMax}"
+                                       placeholder="sans limite"
+                                       class="w-32 rounded-lg border border-slate-300 px-3 py-2"
+                                       th:errorclass="border-red-500">
+                                <p th:if="${#fields.hasErrors('paliers[__${etat.index}__].volumeMax')}"
+                                   th:errors="*{paliers[__${etat.index}__].volumeMax}" class="mt-1 text-xs text-red-600">Erreur</p>
+                            </td>
+                            <td class="py-2 pr-3">
+                                <input type="number" min="0.001" step="0.001" th:field="*{paliers[__${etat.index}__].prixLitre}"
+                                       placeholder="1.050"
+                                       class="w-28 rounded-lg border border-slate-300 px-3 py-2"
+                                       th:errorclass="border-red-500">
+                                <p th:if="${#fields.hasErrors('paliers[__${etat.index}__].prixLitre')}"
+                                   th:errors="*{paliers[__${etat.index}__].prixLitre}" class="mt-1 text-xs text-red-600">Erreur</p>
+                            </td>
+                            <td class="py-2">
+                                <!--/* name + value : le serveur sait QUEL bouton a été cliqué et pour QUELLE ligne */-->
+                                <button th:if="${etat.size > 1}" type="submit" name="retirerPalier" th:value="${etat.index}"
+                                        class="rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50">Retirer</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="submit" name="ajouterPalier" value="true"
+                        class="mt-3 rounded-lg border border-amber-600 px-3 py-1 text-sm font-medium text-amber-700 hover:bg-amber-50">
+                    + Ajouter un palier
+                </button>
+            </div>
+
+            <button type="submit"
+                    class="w-full rounded-lg bg-amber-600 px-4 py-2 font-medium text-white hover:bg-amber-700">
+                Soumettre mon barème
+            </button>
+        </form>
+    </div>
+</main>
+</body>
+</html>

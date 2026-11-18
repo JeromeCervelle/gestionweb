@@ -1,0 +1,13 @@
+/*
+  Fichier SOURCE de Tailwind CSS (ce n'est pas lui que le navigateur reçoit).
+  Le CLI le lit, cherche les classes utilisées dans les templates Thymeleaf
+  et écrit le CSS final dans src/main/resources/static/css/app.css :
+      npm run build:css    (une fois, CSS minifié)
+      npm run watch:css    (en continu pendant le développement)
+*/
+
+/* source(none) : pas de détection automatique, on dit nous-mêmes où chercher les classes */
+@import "tailwindcss" source(none);
+
+/* chemin relatif à CE fichier : tous les templates, fragments compris */
+@source "../resources/templates";

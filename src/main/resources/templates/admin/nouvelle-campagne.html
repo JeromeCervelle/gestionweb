@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+    <title>Nouvelle campagne — Gestion Fioul</title>
+</head>
+<body>
+<main class="max-w-2xl mx-auto px-4 py-12">
+    <a th:href="@{/admin/campagnes}" class="text-sm text-amber-700 hover:underline">← Administration</a>
+
+    <div class="mt-4 bg-white rounded-xl shadow p-8">
+        <h1 class="text-2xl font-bold text-slate-900">Nouvelle campagne</h1>
+        <p class="mt-1 text-sm text-slate-600">
+            La campagne est créée en <strong>brouillon</strong> : elle n'est visible de personne tant que vous ne l'ouvrez pas.
+        </p>
+
+        <form th:action="@{/admin/campagnes/nouvelle}" th:object="${campagne}" method="post" class="mt-6 space-y-5" novalidate>
+            <div th:if="${#fields.hasGlobalErrors()}"
+                 class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+                <p th:each="erreur : ${#fields.globalErrors()}" th:text="${erreur}">Erreur de l'API</p>
+            </div>
+
+            <div>
+                <label for="libelle" class="block text-sm font-medium text-slate-700">Libellé *</label>
+                <input type="text" th:field="*{libelle}" placeholder="Commande groupée de janvier"
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                       th:errorclass="border-red-500">
+                <p th:if="${#fields.hasErrors('libelle')}" th:errors="*{libelle}" class="mt-1 text-sm text-red-600">Erreur</p>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2">
+                <div>
+                    <label for="dateOuverture" class="block text-sm font-medium text-slate-700">Ouverture *</label>
+                    <input type="datetime-local" th:field="*{dateOuverture}"
+                           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" th:errorclass="border-red-500">
+                    <p th:if="${#fields.hasErrors('dateOuverture')}" th:errors="*{dateOuverture}" class="mt-1 text-sm text-red-600">Erreur</p>
+                </div>
+                <div>
+                    <label for="dateCloture" class="block text-sm font-medium text-slate-700">Date limite de participation *</label>
+                    <input type="datetime-local" th:field="*{dateCloture}"
+                           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" th:errorclass="border-red-500">
+                    <p th:if="${#fields.hasErrors('dateCloture')}" th:errors="*{dateCloture}" class="mt-1 text-sm text-red-600">Erreur</p>
+                </div>
+            </div>
+
+            <div>
+                <label for="zoneLivraison" class="block text-sm font-medium text-slate-700">Zone de livraison</label>
+                <input type="text" th:field="*{zoneLivraison}" placeholder="87, Limoges et alentours..."
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+            </div>
+
+            <button type="submit" class="w-full rounded-lg bg-amber-600 px-4 py-2 font-medium text-white hover:bg-amber-700">
+                Créer la campagne
+            </button>
+        </form>
+    </div>
+</main>
+</body>
+</html>

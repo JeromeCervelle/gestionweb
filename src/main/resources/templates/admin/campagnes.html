@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+    <title>Administration — Gestion Fioul</title>
+</head>
+<body>
+<main class="max-w-6xl mx-auto px-4 py-10">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <h1 class="text-2xl font-bold text-slate-900">Administration des campagnes</h1>
+        <a th:href="@{/admin/campagnes/nouvelle}"
+           class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700">+ Nouvelle campagne</a>
+    </div>
+
+    <!--/* Onglets : un lien par statut, ?statut=... ; l'onglet courant est mis en valeur avec th:classappend */-->
+    <nav class="mt-6 flex flex-wrap gap-2 border-b border-slate-200">
+        <a th:each="s : ${statuts}" th:href="@{/admin/campagnes(statut=${s})}"
+           class="-mb-px border-b-2 px-3 py-2 text-sm"
+           th:classappend="${s == statutChoisi} ? 'border-amber-600' : 'border-transparent opacity-60 hover:opacity-100'">
+            <!--/* th:replace sur une balise INTÉRIEURE : sur le <a> lui-même, il remplacerait tout le lien */-->
+            <span th:replace="~{fragments/badges :: statutCampagne(${s})}">OUVERTE</span>
+        </a>
+    </nav>
+
+    <p th:if="${#lists.isEmpty(campagnes)}" class="mt-6 text-slate-600">Aucune campagne dans ce statut.</p>
+
+    <div th:unless="${#lists.isEmpty(campagnes)}" class="mt-6 overflow-x-auto bg-white rounded-xl shadow">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-100 text-left text-slate-600">
+            <tr>
+                <th class="px-4 py-3">Campagne</th>
+                <th class="px-4 py-3">Zone</th>
+                <th class="px-4 py-3">Ouverture</th>
+                <th class="px-4 py-3">Date limite</th>
+                <th class="px-4 py-3 text-right">Volume total</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+            <tr th:each="c : ${campagnes}" class="hover:bg-slate-50">
+                <td class="px-4 py-3 font-medium" th:text="${c.libelle}">Commande d'hiver</td>
+                <td class="px-4 py-3" th:text="${c.zoneLivraison} ?: '—'">87</td>
+                <td class="px-4 py-3" th:text="${#temporals.format(c.dateOuverture, 'dd/MM/yyyy HH:mm')}">01/12/2026 08:00</td>
+                <td class="px-4 py-3" th:text="${#temporals.format(c.dateCloture, 'dd/MM/yyyy HH:mm')}">31/12/2026 23:59</td>
+                <td class="px-4 py-3 text-right"
+                    th:text="${c.volumeTotal > 0} ? |${#numbers.formatInteger(c.volumeTotal, 1, 'WHITESPACE')} L| : '—'">7 000 L</td>
+                <td class="px-4 py-3 text-right">
+                    <a th:href="@{/admin/campagnes/{id}(id=${c.id})}" class="font-medium text-amber-700 hover:underline">Gérer →</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

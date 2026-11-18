@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+    <title>Mes propositions — Gestion Fioul</title>
+</head>
+<body>
+<main class="max-w-6xl mx-auto px-4 py-10">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <h1 class="text-2xl font-bold text-slate-900">Mes propositions</h1>
+        <a th:href="@{/campagnes}"
+           class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700">
+            Voir les campagnes ouvertes
+        </a>
+    </div>
+
+    <p th:if="${info}" th:text="${info}"
+       class="mt-6 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">Barème enregistré.</p>
+
+    <p th:if="${#lists.isEmpty(lignes)}" class="mt-6 text-slate-600">Vous n'avez encore proposé aucun barème.</p>
+
+    <div class="mt-6 grid gap-6 md:grid-cols-2">
+        <!--/* une carte par proposition */-->
+        <article th:each="ligne : ${lignes}" th:with="p=${ligne.proposition}, c=${ligne.campagne}"
+                 class="bg-white rounded-xl shadow p-6">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="font-semibold text-slate-900" th:text="${c.libelle}">Commande d'hiver</h2>
+                    <p class="text-xs text-slate-500">
+                        Campagne <span th:text="${c.statut}">OUVERTE</span>
+                        · proposé le <span th:text="${#temporals.format(p.dateProposition, 'dd/MM/yyyy')}">01/12/2026</span>
+                        · valable jusqu'au <span th:text="${#temporals.format(p.validiteJusqua, 'dd/MM/yyyy HH:mm')}">31/01/2027 18:00</span>
+                    </p>
+                </div>
+                <span th:switch="${p.statut.name()}">
+                    <span th:case="'SOUMISE'" class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">En attente</span>
+                    <span th:case="'RETENUE'" class="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">Retenue 🎉</span>
+                    <span th:case="'REJETEE'" class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">Non retenue</span>
+                </span>
+            </div>
+
+            <table class="mt-4 w-full text-sm">
+                <tbody class="divide-y divide-slate-100">
+                <tr th:each="palier : ${p.paliers}"
+                    th:classappend="${c.volumeTotal > 0 and palier.contient(c.volumeTotal)} ? 'bg-amber-50 font-semibold'">
+                    <td class="py-1">
+                        <span th:if="${palier.volumeMax != null}"
+                              th:text="|de ${#numbers.formatInteger(palier.volumeMin, 1, 'WHITESPACE')} à ${#numbers.formatInteger(palier.volumeMax, 1, 'WHITESPACE')} L|">de 0 à 5 000 L</span>
+                        <span th:unless="${palier.volumeMax != null}"
+                              th:text="|à partir de ${#numbers.formatInteger(palier.volumeMin, 1, 'WHITESPACE')} L|">à partir de 15 000 L</span>
+                    </td>
+                    <!--/* formatDecimal(nombre, chiffres entiers min, séparateur milliers, décimales, séparateur décimal) */-->
+                    <td class="py-1 text-right"
+                        th:text="|${#numbers.formatDecimal(palier.prixLitre, 1, 'WHITESPACE', 3, 'COMMA')} €/L|">1,100 €/L</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!--/* seulement quand la campagne est clôturée : le volume total est alors connu */-->
+            <p th:if="${ligne.prixAuVolumeTotal() != null}" class="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                Volume total de la campagne :
+                <strong th:text="|${#numbers.formatInteger(c.volumeTotal, 1, 'WHITESPACE')} L|">7 000 L</strong>
+                → votre prix : <strong th:text="|${#numbers.formatDecimal(ligne.prixAuVolumeTotal(), 1, 'WHITESPACE', 3, 'COMMA')} €/L|">1,020 €/L</strong>,
+                soit <strong th:text="|${#numbers.formatDecimal(ligne.montantTotal(), 1, 'WHITESPACE', 2, 'COMMA')} €|">7 140,00 €</strong>.
+            </p>
+        </article>
+    </div>
+</main>
+</body>
+</html>

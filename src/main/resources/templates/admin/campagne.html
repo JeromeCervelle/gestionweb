@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+    <title>Gérer une campagne — Gestion Fioul</title>
+</head>
+<body>
+<main class="max-w-6xl mx-auto px-4 py-10">
+    <a th:href="@{/admin/campagnes(statut=${campagne.statut})}" class="text-sm text-amber-700 hover:underline">← Administration</a>
+
+    <p th:if="${info}" th:text="${info}"
+       class="mt-4 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">Action effectuée.</p>
+    <p th:if="${erreur}" th:text="${erreur}"
+       class="mt-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">Erreur de l'API</p>
+
+    <!--/* ---------------------------------------------------------------- en-tête et actions */-->
+    <section class="mt-4 bg-white rounded-xl shadow p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-slate-900" th:text="${campagne.libelle}">Commande d'hiver</h1>
+                    <span th:replace="~{fragments/badges :: statutCampagne(${campagne.statut})}">OUVERTE</span>
+                </div>
+                <p class="mt-2 text-sm text-slate-600">
+                    Zone <strong th:text="${campagne.zoneLivraison} ?: '—'">87</strong>
+                    · ouverture <strong th:text="${#temporals.format(campagne.dateOuverture, 'dd/MM/yyyy HH:mm')}">01/12/2026</strong>
+                    · date limite <strong th:text="${#temporals.format(campagne.dateCloture, 'dd/MM/yyyy HH:mm')}">31/12/2026</strong>
+                </p>
+            </div>
+
+            <!--/*
+              Un petit formulaire POST par action possible (liste fournie par StatutCampagne.actionsPossibles()).
+              Confirmation : Thymeleaf 3.1 interdit d'insérer du TEXTE calculé dans un attribut d'événement
+              (th:onsubmit="...${...}...") pour éviter l'injection de JavaScript. On place donc le message dans un
+              attribut data-* (autorisé), que le code JavaScript FIXE de onsubmit va lire.
+            */-->
+            <div class="flex flex-wrap gap-2">
+                <form th:each="action : ${actions}" th:action="@{/admin/campagnes/{id}/action(id=${campagne.id})}"
+                      method="post" th:data-confirmation="${action.confirmation}"
+                      onsubmit="return confirm(this.dataset.confirmation);">
+                    <input type="hidden" name="action" th:value="${action}">
+                    <button type="submit" th:text="${action.libelle}"
+                            class="rounded-lg px-4 py-2 text-sm font-medium"
+                            th:classappend="${action.destructive} ? 'border border-red-300 text-red-700 hover:bg-red-50' : 'bg-amber-600 text-white hover:bg-amber-700'">
+                        Ouvrir la campagne
+                    </button>
+                </form>
+                <p th:if="${#lists.isEmpty(actions)}" class="text-sm text-slate-500">Campagne terminée : aucune action possible.</p>
+            </div>
+        </div>
+
+        <dl class="mt-6 grid gap-4 sm:grid-cols-3 text-sm">
+            <div class="rounded-lg bg-slate-50 p-4">
+                <dt class="text-slate-500" th:text="${campagne.volumeTotal > 0} ? 'Volume total (figé à la clôture)' : 'Volume engagé à ce jour'">Volume</dt>
+                <dd class="mt-1 text-2xl font-bold"
+                    th:text="|${#numbers.formatInteger(campagne.volumeTotal > 0 ? campagne.volumeTotal : volumeEngage, 1, 'WHITESPACE')} L|">7 000 L</dd>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4">
+                <dt class="text-slate-500">Participations confirmées</dt>
+                <dd class="mt-1 text-2xl font-bold"
+                    th:text="${#lists.size(participations.?[statut.name() == 'CONFIRMEE'])}">2</dd>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4">
+                <dt class="text-slate-500">Barèmes reçus</dt>
+                <dd class="mt-1 text-2xl font-bold" th:text="${#lists.size(offres)}">2</dd>
+            </div>
+        </dl>
+    </section>
+
+    <!--/* ---------------------------------------------------------------- barèmes des fournisseurs */-->
+    <section class="mt-8">
+        <h2 class="text-lg font-semibold text-slate-900">Barèmes des fournisseurs</h2>
+        <p class="text-xs text-slate-500">
+            Confidentiels : seul l'administrateur les voit. Une fois la campagne clôturée, ils sont classés du moins cher au plus cher
+            pour le volume total.
+        </p>
+        <p th:if="${#lists.isEmpty(offres)}" class="mt-4 text-slate-600">Aucun barème reçu.</p>
+
+        <div th:unless="${#lists.isEmpty(offres)}" class="mt-4 overflow-x-auto bg-white rounded-xl shadow">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-100 text-left text-slate-600">
+                <tr>
+                    <th class="px-4 py-3">Fournisseur</th>
+                    <th class="px-4 py-3">Paliers</th>
+                    <th class="px-4 py-3">Valable jusqu'au</th>
+                    <th class="px-4 py-3 text-right">Prix au volume total</th>
+                    <th class="px-4 py-3 text-right">Montant</th>
+                    <th class="px-4 py-3">Statut</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                <tr th:each="offre : ${offres}" th:with="p=${offre.proposition}"
+                    th:classappend="${p.id == campagne.propositionRetenueId} ? 'bg-green-50 font-semibold'">
+                    <td class="px-4 py-3" th:text="${utilisateurs.get(p.fournisseurId).designation()}">Fioul Limousin</td>
+                    <td class="px-4 py-3">
+                        <div th:each="palier : ${p.paliers}" class="whitespace-nowrap"
+                             th:text="${palier.volumeMax != null}
+                                ? |${#numbers.formatInteger(palier.volumeMin, 1, 'WHITESPACE')} – ${#numbers.formatInteger(palier.volumeMax, 1, 'WHITESPACE')} L : ${#numbers.formatDecimal(palier.prixLitre, 1, 'WHITESPACE', 3, 'COMMA')} €|
+                                : |≥ ${#numbers.formatInteger(palier.volumeMin, 1, 'WHITESPACE')} L : ${#numbers.formatDecimal(palier.prixLitre, 1, 'WHITESPACE', 3, 'COMMA')} €|">
+                            0 – 5 000 L : 1,100 €
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap" th:text="${#temporals.format(p.validiteJusqua, 'dd/MM/yyyy HH:mm')}">31/01/2027</td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap"
+                        th:text="${offre.prixAuVolumeTotal() != null} ? |${#numbers.formatDecimal(offre.prixAuVolumeTotal(), 1, 'WHITESPACE', 3, 'COMMA')} €/L| : '—'">1,020 €/L</td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap"
+                        th:text="${offre.montantTotal() != null} ? |${#numbers.formatDecimal(offre.montantTotal(), 1, 'WHITESPACE', 2, 'COMMA')} €| : '—'">7 140,00 €</td>
+                    <td class="px-4 py-3">
+                        <span th:replace="~{fragments/badges :: statutProposition(${p.statut})}">SOUMISE</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!--/* ---------------------------------------------------------------- participations des clients */-->
+    <section class="mt-8">
+        <h2 class="text-lg font-semibold text-slate-900">Participations des clients</h2>
+        <p th:if="${#lists.isEmpty(participations)}" class="mt-4 text-slate-600">Aucune participation.</p>
+
+        <div th:unless="${#lists.isEmpty(participations)}" class="mt-4 overflow-x-auto bg-white rounded-xl shadow">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-100 text-left text-slate-600">
+                <tr>
+                    <th class="px-4 py-3">Client</th>
+                    <th class="px-4 py-3">Email</th>
+                    <th class="px-4 py-3 text-right">Volume</th>
+                    <th class="px-4 py-3">Adresse de livraison</th>
+                    <th class="px-4 py-3">Le</th>
+                    <th class="px-4 py-3">Statut</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                <tr th:each="pa : ${participations}" th:with="client=${utilisateurs.get(pa.clientId)}"
+                    th:classappend="${pa.statut.name() == 'ANNULEE'} ? 'text-slate-400'">
+                    <td class="px-4 py-3" th:text="${client.designation()}">Alice Durand</td>
+                    <td class="px-4 py-3" th:text="${client.email}">alice@test.fr</td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap"
+                        th:text="|${#numbers.formatInteger(pa.volumeSouhaite, 1, 'WHITESPACE')} L|">3 000 L</td>
+                    <td class="px-4 py-3" th:text="${pa.adresseLivraison} ?: '—'">1 rue A</td>
+                    <td class="px-4 py-3 whitespace-nowrap" th:text="${#temporals.format(pa.dateParticipation, 'dd/MM/yyyy')}">01/12/2026</td>
+                    <td class="px-4 py-3">
+                        <span th:replace="~{fragments/badges :: statutParticipation(${pa.statut})}">CONFIRMEE</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Structure du site de documentation (./mvnw verify site) : apparence et menus -->
+<site xmlns="http://maven.apache.org/SITE/2.0.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 https://maven.apache.org/xsd/site-2.0.0.xsd">
+
+    <!-- apparence : le skin « Fluido » (Bootstrap), le plus utilisé pour les sites Maven -->
+    <skin>
+        <groupId>org.apache.maven.skins</groupId>
+        <artifactId>maven-fluido-skin</artifactId>
+        <version>2.1.0</version>
+    </skin>
+
+    <body>
+        <breadcrumbs>
+            <item name="gestionweb" href="index.html"/>
+        </breadcrumbs>
+
+        <!-- menu de gauche, écrit à la main pour qu'il soit en français.
+             (<menu ref="reports"/> ajouterait le menu généré par Maven, mais avec des titres en anglais) -->
+        <menu name="Documentation technique">
+            <item name="Accueil" href="index.html"/>
+            <item name="Javadoc" href="apidocs/index.html"/>
+            <item name="Résultats des tests" href="surefire.html"/>
+            <item name="Couverture de code" href="jacoco/index.html"/>
+            <item name="Dépendances" href="dependencies.html"/>
+        </menu>
+    </body>
+</site>

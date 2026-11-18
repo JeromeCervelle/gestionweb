@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!--/*
+  Gabarit commun à toutes les pages.
+  Le fragment "page" reçoit deux morceaux de HTML venant de la page appelante :
+    - blocTitre   : sa balise <title>
+    - blocContenu : sa balise <main>
+  Il les insère au bon endroit, entre l'en-tête et le pied de page communs.
+*/-->
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="page(blocTitre, blocContenu)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:replace="${blocTitre}">Gestion Fioul</title>
+    <!--/*
+      Feuille de style générée par le CLI Tailwind (étape 8) à partir de src/main/css/app.css :
+      npm run build:css (ou watch:css en développement). @{/css/app.css} ajoute le contexte de l'application.
+    */-->
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+
+<header class="bg-amber-600 text-white shadow">
+    <nav class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <a th:href="@{/}" class="text-xl font-bold tracking-tight">⛽ Gestion Fioul</a>
+        <ul class="flex items-center gap-4 text-sm">
+            <li><a th:href="@{/}" class="hover:underline">Accueil</a></li>
+            <li><a th:href="@{/campagnes}" class="hover:underline">Campagnes</a></li>
+            <li sec:authorize="hasRole('CLIENT')">
+                <a th:href="@{/mes-participations}" class="hover:underline">Mes participations</a>
+            </li>
+            <li sec:authorize="hasRole('FOURNISSEUR')">
+                <a th:href="@{/mes-propositions}" class="hover:underline">Mes propositions</a>
+            </li>
+            <li sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/admin/campagnes}" class="hover:underline">Administration</a>
+            </li>
+
+            <!--/* sec:authorize : la balise n'est produite que si l'expression de sécurité est vraie */-->
+            <li sec:authorize="isAnonymous()">
+                <a th:href="@{/inscription}" class="hover:underline">Inscription</a>
+            </li>
+            <li sec:authorize="isAnonymous()">
+                <a th:href="@{/connexion}"
+                   class="rounded-lg bg-white px-3 py-1 font-medium text-amber-700 hover:bg-amber-50">Connexion</a>
+            </li>
+
+            <li sec:authorize="isAuthenticated()" class="flex items-center gap-3">
+                <!--/* #authentication.principal : notre UtilisateurConnecte, rangé en session à la connexion */-->
+                <span th:text="${#authentication.principal.nomAffiche()}">Alice Durand</span>
+                <span class="rounded bg-amber-800 px-2 py-0.5 text-xs font-semibold"
+                      th:text="${#authentication.principal.role}">CLIENT</span>
+                <!--/* la déconnexion est un POST (protégé par le jeton CSRF), jamais un simple lien */-->
+                <form th:action="@{/deconnexion}" method="post">
+                    <button type="submit" class="hover:underline">Déconnexion</button>
+                </form>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<main th:replace="${blocContenu}">
+    Contenu de la page
+</main>
+
+<footer class="mt-auto bg-slate-800 text-slate-300 text-sm">
+    <div class="max-w-6xl mx-auto px-4 py-4 text-center">
+        Gestion Fioul — projet BTS SIO SLAM
+    </div>
+</footer>
+
+</body>
+</html>

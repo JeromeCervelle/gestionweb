@@ -1,0 +1,13 @@
+{
+  "name": "gestionweb",
+  "private": true,
+  "description": "Outillage CSS du site gestionweb : compilation de Tailwind CSS avec le CLI",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/main/css/app.css -o ./src/main/resources/static/css/app.css --minify",
+    "watch:css": "tailwindcss -i ./src/main/css/app.css -o ./src/main/resources/static/css/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.1.11",
+    "tailwindcss": "4.1.11"
+  }
+}

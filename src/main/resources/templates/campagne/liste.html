@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+    <title>Campagnes ouvertes — Gestion Fioul</title>
+</head>
+<body>
+<main class="max-w-6xl mx-auto px-4 py-10">
+    <h1 class="text-2xl font-bold text-slate-900">Campagnes ouvertes</h1>
+
+    <!--/* th:if / th:unless : affichage conditionnel */-->
+    <p th:if="${#lists.isEmpty(campagnes)}" class="mt-6 text-slate-600">
+        Aucune campagne n'est ouverte pour le moment.
+    </p>
+
+    <div th:unless="${#lists.isEmpty(campagnes)}" class="mt-6 overflow-x-auto bg-white rounded-xl shadow">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-100 text-left text-slate-600">
+            <tr>
+                <th class="px-4 py-3">Campagne</th>
+                <th class="px-4 py-3">Zone</th>
+                <th class="px-4 py-3">Ouverture</th>
+                <th class="px-4 py-3">Date limite</th>
+                <th class="px-4 py-3">Statut</th>
+                <th sec:authorize="hasAnyRole('CLIENT', 'FOURNISSEUR')" class="px-4 py-3"></th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+            <!--/* th:each : une ligne <tr> par campagne de la liste */-->
+            <tr th:each="campagne : ${campagnes}" class="hover:bg-slate-50">
+                <td class="px-4 py-3 font-medium" th:text="${campagne.libelle}">Commande groupée janvier</td>
+                <td class="px-4 py-3" th:text="${campagne.zoneLivraison} ?: '—'">87</td>
+                <!--/* #temporals : objet utilitaire Thymeleaf pour formater les dates java.time */-->
+                <td class="px-4 py-3" th:text="${#temporals.format(campagne.dateOuverture, 'dd/MM/yyyy HH:mm')}">01/01/2027 08:00</td>
+                <td class="px-4 py-3" th:text="${#temporals.format(campagne.dateCloture, 'dd/MM/yyyy HH:mm')}">31/01/2027 23:59</td>
+                <td class="px-4 py-3">
+                    <span class="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800"
+                          th:text="${campagne.statut}">OUVERTE</span>
+                </td>
+                <!--/* Commentaire Thymeleaf : retiré du HTML envoyé au navigateur, contrairement à un commentaire HTML.
+                       Seuls les clients participent ; @{/campagnes/{id}/participer(id=...)} : variable d'URL */-->
+                <td sec:authorize="hasRole('CLIENT')" class="px-4 py-3 text-right">
+                    <a th:href="@{/campagnes/{id}/participer(id=${campagne.id})}"
+                       class="rounded-lg bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700">Participer</a>
+                </td>
+                <!--/* seuls les fournisseurs proposent un barème */-->
+                <td sec:authorize="hasRole('FOURNISSEUR')" class="px-4 py-3 text-right">
+                    <a th:href="@{/campagnes/{id}/proposer(id=${campagne.id})}"
+                       class="rounded-lg bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700">Proposer un barème</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+    <title>Participer — Gestion Fioul</title>
+</head>
+<body>
+<main class="max-w-2xl mx-auto px-4 py-12">
+    <a th:href="@{/campagnes}" class="text-sm text-amber-700 hover:underline">← Retour aux campagnes</a>
+
+    <div class="mt-4 bg-white rounded-xl shadow p-8">
+        <p class="text-sm font-semibold text-amber-700">Participer à la campagne</p>
+        <h1 class="mt-1 text-2xl font-bold text-slate-900" th:text="${campagne.libelle}">Commande groupée d'hiver</h1>
+
+        <dl class="mt-4 grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <dt class="text-slate-500">Zone de livraison</dt>
+                <dd class="font-medium" th:text="${campagne.zoneLivraison} ?: '—'">87</dd>
+            </div>
+            <div>
+                <dt class="text-slate-500">Date limite de participation</dt>
+                <dd class="font-medium" th:text="${#temporals.format(campagne.dateCloture, 'dd/MM/yyyy à HH:mm')}">31/12/2026 à 23:59</dd>
+            </div>
+        </dl>
+
+        <form th:action="@{/campagnes/{id}/participer(id=${campagne.id})}" th:object="${participation}"
+              method="post" class="mt-8 space-y-5" novalidate>
+
+            <div th:if="${#fields.hasGlobalErrors()}"
+                 class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+                <p th:each="erreur : ${#fields.globalErrors()}" th:text="${erreur}">Ce client participe déjà à la campagne</p>
+            </div>
+
+            <div>
+                <label for="volumeSouhaite" class="block text-sm font-medium text-slate-700">Volume souhaité (litres) *</label>
+                <input type="number" min="1" step="1" th:field="*{volumeSouhaite}"
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                       th:errorclass="border-red-500">
+                <p th:if="${#fields.hasErrors('volumeSouhaite')}" th:errors="*{volumeSouhaite}" class="mt-1 text-sm text-red-600">Erreur</p>
+                <p class="mt-1 text-xs text-slate-500">
+                    Plus le volume total de la campagne est élevé, plus le prix au litre sera bas pour tous.
+                </p>
+            </div>
+
+            <div>
+                <label for="adresseLivraison" class="block text-sm font-medium text-slate-700">Adresse de livraison</label>
+                <input type="text" th:field="*{adresseLivraison}" autocomplete="street-address"
+                       placeholder="laisser vide pour utiliser l'adresse de votre profil"
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200">
+            </div>
+
+            <button type="submit"
+                    class="w-full rounded-lg bg-amber-600 px-4 py-2 font-medium text-white hover:bg-amber-700">
+                Confirmer ma participation
+            </button>
+        </form>
+    </div>
+</main>
+</body>
+</html>
